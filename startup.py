@@ -1,4 +1,5 @@
 from app.engine import Engine
 
 engine = Engine()
-engine.put_object({"teste":"entrada"})
+
+engine.create_db(2)
