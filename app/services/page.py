@@ -1,6 +1,5 @@
 import math
 
-
 PAGE_HEADER_SIZE = 8
 PG_SIZE = 1024
 
@@ -10,23 +9,12 @@ class Page:
         self.used_bytes = 0
         self.data = bytearray()
 
-    def insert_data(self, data):
-        bytes_de_dados = bytes()
-
-        if type(data) is int:
-            bits = data.bit_length()
-            bytes_necessarios = math.ceil(bits / 8) if bits > 0 else 1
-            bytes_convertidos = data.to_bytes(bytes_necessarios, "little")
-            bytes_de_dados = bytes_convertidos
-        if type(data) is str: 
-            bytes_convertidos = data.encode('utf-8')
-            bytes_de_dados = bytes_convertidos
-
-        if self.used_bytes + len(bytes_de_dados) > PG_SIZE - PAGE_HEADER_SIZE:
+    def insert_data(self, data: bytes):
+        if self.used_bytes + len(data) > PG_SIZE - PAGE_HEADER_SIZE:
             raise Exception("Pagina não tem mais espaço")
         
-        self.data[8+self.used_bytes:8+len(bytes_de_dados)] = bytes_de_dados
-        self.used_bytes += len(bytes_de_dados)
+        self.data[8+self.used_bytes:8+len(data)] = data
+        self.used_bytes += len(data)
 
     @classmethod
     def from_bytes(cls, data_bytes: bytes) -> 'Page':
