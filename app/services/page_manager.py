@@ -36,7 +36,7 @@ class PageManager:
             f.write(self.last_page.to_bytes())
             f.flush()
 
-## Verificar Possivel loop
+## Verificar Possivel loop caso o dado exceda 1016 bytes
     def add_data(self, data):
         bytes_de_dados = bytes()
 
@@ -66,5 +66,18 @@ class PageManager:
                 raise Exception("Page inexistente")
 
             return Page.from_bytes(raw)
+        
+
+    def get_page_data(self, page_id: int) -> bytes:
+        with open(self.file_path, "rb+") as f:
+            offset = page_id * PG_SIZE
+            f.seek(offset)
+            raw = f.read(PG_SIZE)
+
+            if len(raw) != PG_SIZE:
+                raise Exception("Page inexistente")
+
+            page = Page.from_bytes(raw)
+            return bytes(page.data)
 
 
