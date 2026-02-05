@@ -22,14 +22,14 @@ class PageManager:
     
     def write_page(self, page: Page):
         with open(self.file_path, "rb+") as f:
-            offset = page.page_id * PG_SIZE
+            offset = page.page_id * Const.PAGE_SIZE
             f.seek(offset)
             f.write(page.to_bytes())
             f.flush()
 
     def commit_changes_of_actual_page(self):
         with open(self.file_path, "rb+") as f:
-            offset = self.last_page.page_id * PG_SIZE
+            offset = self.last_page.page_id * Const.PAGE_SIZE
             f.seek(offset)
             f.write(self.last_page.to_bytes())
             f.flush()

@@ -1,0 +1,2 @@
+class DatabaseHeader: 
+    version: int
