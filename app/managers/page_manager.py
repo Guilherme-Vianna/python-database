@@ -3,79 +3,31 @@ import os
 
 from ..structs import Page
 from ..configuration import Const
+from .file_manager import FileManager
 
 class PageManager:
     last_page: Page
 
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-
-        if not os.path.exists(file_path):
-            with open(file_path, "wb"):
-                pass
-
-        file_size = os.path.getsize(self.file_path)
-        if file_size == 0: 
-            self.last_page = Page(0)
+    def __init__(self):
+        if not self.database_have_pages():
+            self.create_initial_page()
         else: 
-            self.last_page = self.read_page(file_size // Const.PAGE_SIZE - 1)
-    
-    def write_page(self, page: Page):
-        with open(self.file_path, "rb+") as f:
-            offset = page.page_id * Const.PAGE_SIZE
-            f.seek(offset)
-            f.write(page.to_bytes())
-            f.flush()
+            self.load_last_page()
 
-    def commit_changes_of_actual_page(self):
-        with open(self.file_path, "rb+") as f:
-            offset = self.last_page.page_id * Const.PAGE_SIZE
-            f.seek(offset)
-            f.write(self.last_page.to_bytes())
-            f.flush()
+    def create_initial_page(self):
+        page = Page(0) 
+        with FileManager.get_database_file() as database_file: 
+            database_file.seek(Const.DATABASE_HEADER_SIZE)
+            database_file.write(page.to_bytes())
+            FileManager.save_file_to_disk(database_file)
 
-## Verificar Possivel loop caso o dado exceda 1016 bytes
-    def add_data(self, data):
-        bytes_de_dados = bytes()
+    def load_last_page(self):
+        database_size = FileManager.get_database_size()
+        page_count = math.ceil(( database_size - Const.DATABASE_HEADER_SIZE) / Const.PAGE_SIZE)  
+        with FileManager.get_database_file() as database_file: 
+            database_file.seek(int((page_count - 1) * Const.PAGE_SIZE + Const.DATABASE_HEADER_SIZE))
+            page_bytes = database_file.read(Const.PAGE_SIZE)
+            self.last_page = Page().from_bytes(page_bytes)
 
-        if type(data) is int:
-            bits = data.bit_length()
-            bytes_necessarios = math.ceil(bits / 8) if bits > 0 else 1
-            bytes_convertidos = data.to_bytes(bytes_necessarios, "little")
-            bytes_de_dados = bytes_convertidos
-        if type(data) is str: 
-            bytes_convertidos = data.encode('utf-8')
-            bytes_de_dados = bytes_convertidos
-        
-        try:
-            self.last_page.insert_data(bytes_de_dados)
-            self.commit_changes_of_actual_page()
-        except: 
-            self.last_page = Page(self.last_page.page_id + 1)
-            self.add_data(data)
-
-    def read_page(self, page_id: int) -> Page:
-        with open(self.file_path, "rb+") as f:
-            offset = page_id * Const. PAGE_SIZE
-            f.seek(offset)
-            raw = f.read(Const.PAGE_SIZE)
-
-            if len(raw) != Const.PAGE_SIZE:
-                raise Exception("Page inexistente")
-
-            return Page.from_bytes(raw)
-        
-
-    def get_page_data(self, page_id: int) -> bytes:
-        with open(self.file_path, "rb+") as f:
-            offset = page_id * Const.PAGE_SIZE
-            f.seek(offset)
-            raw = f.read(Const.PAGE_SIZE)
-
-            if len(raw) != Const.PAGE_SIZE:
-                raise Exception("Page inexistente")
-
-            page = Page.from_bytes(raw)
-            return bytes(page.data)
-
-
+    def database_have_pages(self) -> bool: 
+        return FileManager.get_database_size() != Const.DATABASE_HEADER_SIZE 

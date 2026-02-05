@@ -1,38 +1,35 @@
 from ..configuration import Const
+from ..managers.byte_manager import ByteManager
+
+"""
+Estrutura de uma pagina
+
+HEADER
+page_id = 4 bytes
+remaing_bytes = 4 bytes
+
+DATA
+data = 1016 Bytes
+
+TOTAL = 1024 Bytes
+
+"""
 
 class Page:
-    def __init__(self, page_id: int):
+    def __init__(self, page_id: int = 0):
         self.page_id = page_id
-        self.used_bytes = 0
+        self.remaing_bytes = 1016
         self.data = bytearray()
-
-    def insert_data(self, data: bytes):
-        if self.used_bytes + len(data) > Const.PAGE_SIZE - PAGE_HEADER_SIZE:
-            raise Exception("Pagina não tem mais espaço")
-        
-        self.data[8+self.used_bytes:8+len(data)] = data
-        self.used_bytes += len(data)
-
-    @classmethod
-    def from_bytes(cls, data_bytes: bytes) -> 'Page':
-        if len(data_bytes) != Const.PAGE_SIZE:
-            raise ValueError(f"O buffer deve ter exatamente {Const.PAGE_SIZE} bytes")
-
-        page_id = int.from_bytes(data_bytes[0:4], "little")
-        used_bytes = int.from_bytes(data_bytes[4:8], "little")
-        
-        page = cls(page_id)
-        page.used_bytes = used_bytes
-        page.data = bytearray(data_bytes[8:8 + used_bytes])
-        
+    
+    def to_bytes(self) -> bytes: 
+        page_byte_array = bytearray(1024)
+        page_byte_array[0:4] = ByteManager.int_to_bytes(self.page_id, 4)
+        page_byte_array[4:8] = ByteManager.int_to_bytes(1016, 4)
+        return bytes(page_byte_array)
+    
+    def from_bytes(self, page_bytes: bytes) -> 'Page':
+        page = Page()
+        page.page_id = ByteManager.int_from_bytes(page_bytes[0:4])
+        page.remaing_bytes = ByteManager.int_from_bytes(page_bytes[4:8])
+        page.data = bytearray(page_bytes[8:1024]) 
         return page
-
-    def to_bytes(self) -> bytes:
-        buffer = bytearray(Const.PAGE_SIZE)
-
-        buffer[0:4] = self.page_id.to_bytes(4, "little")
-        buffer[4:8] = self.used_bytes.to_bytes(4, "little")
-
-        buffer[8:8 + self.used_bytes] = self.data
-
-        return bytes(buffer)
