@@ -1,10 +1,8 @@
 import math
 import os
 
-from .page import Page
-
-PG_SIZE = 1024
-PAGE_HEADER_SIZE = 8
+from ..structs import Page
+from ..configuration import Const
 
 class PageManager:
     last_page: Page
@@ -20,7 +18,7 @@ class PageManager:
         if file_size == 0: 
             self.last_page = Page(0)
         else: 
-            self.last_page = self.read_page(file_size // PG_SIZE - 1)
+            self.last_page = self.read_page(file_size // Const.PAGE_SIZE - 1)
     
     def write_page(self, page: Page):
         with open(self.file_path, "rb+") as f:
@@ -58,11 +56,11 @@ class PageManager:
 
     def read_page(self, page_id: int) -> Page:
         with open(self.file_path, "rb+") as f:
-            offset = page_id * PG_SIZE
+            offset = page_id * Const. PAGE_SIZE
             f.seek(offset)
-            raw = f.read(PG_SIZE)
+            raw = f.read(Const.PAGE_SIZE)
 
-            if len(raw) != PG_SIZE:
+            if len(raw) != Const.PAGE_SIZE:
                 raise Exception("Page inexistente")
 
             return Page.from_bytes(raw)
@@ -70,11 +68,11 @@ class PageManager:
 
     def get_page_data(self, page_id: int) -> bytes:
         with open(self.file_path, "rb+") as f:
-            offset = page_id * PG_SIZE
+            offset = page_id * Const.PAGE_SIZE
             f.seek(offset)
-            raw = f.read(PG_SIZE)
+            raw = f.read(Const.PAGE_SIZE)
 
-            if len(raw) != PG_SIZE:
+            if len(raw) != Const.PAGE_SIZE:
                 raise Exception("Page inexistente")
 
             page = Page.from_bytes(raw)

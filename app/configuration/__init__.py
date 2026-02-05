@@ -1,1 +1,1 @@
-from .database_header import DatabaseHeader, PG_SIZE
+from .const import Const

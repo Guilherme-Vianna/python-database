@@ -1,7 +1,4 @@
-import math
-
-PAGE_HEADER_SIZE = 8
-PG_SIZE = 1024
+from ..configuration import Const
 
 class Page:
     def __init__(self, page_id: int):
@@ -10,7 +7,7 @@ class Page:
         self.data = bytearray()
 
     def insert_data(self, data: bytes):
-        if self.used_bytes + len(data) > PG_SIZE - PAGE_HEADER_SIZE:
+        if self.used_bytes + len(data) > Const.PAGE_SIZE - PAGE_HEADER_SIZE:
             raise Exception("Pagina não tem mais espaço")
         
         self.data[8+self.used_bytes:8+len(data)] = data
@@ -18,8 +15,8 @@ class Page:
 
     @classmethod
     def from_bytes(cls, data_bytes: bytes) -> 'Page':
-        if len(data_bytes) != PG_SIZE:
-            raise ValueError(f"O buffer deve ter exatamente {PG_SIZE} bytes")
+        if len(data_bytes) != Const.PAGE_SIZE:
+            raise ValueError(f"O buffer deve ter exatamente {Const.PAGE_SIZE} bytes")
 
         page_id = int.from_bytes(data_bytes[0:4], "little")
         used_bytes = int.from_bytes(data_bytes[4:8], "little")
@@ -31,7 +28,7 @@ class Page:
         return page
 
     def to_bytes(self) -> bytes:
-        buffer = bytearray(PG_SIZE)
+        buffer = bytearray(Const.PAGE_SIZE)
 
         buffer[0:4] = self.page_id.to_bytes(4, "little")
         buffer[4:8] = self.used_bytes.to_bytes(4, "little")
