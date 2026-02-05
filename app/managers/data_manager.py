@@ -6,3 +6,6 @@ class DataManager:
     
     def __init__(self):
         self.page_manager = PageManager()
+
+    def add_data(self, data):
+        self.page_manager.add_data(data)
